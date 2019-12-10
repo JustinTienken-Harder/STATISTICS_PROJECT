@@ -1,0 +1,359 @@
+---
+title: "Hostel Ratings And Prices"
+author: "Ashley, Manda, Justin"
+date: "12/10/2019"
+output: ioslides_presentation
+---
+
+
+## Introducing our Data and Methods {.tabset}
+
+We found our dataset on [kaggle.](https://www.kaggle.com/azathoth42/myanimelist)  
+The two collections we chose to use were anime_clean and userS_clean. The filtered versions of these documents is alse included to evaluate the data quality.  The cleaned version excludes inprobable entries.  The filtered version excludes users that have incomplete personal information.  
+
+```{r, include = FALSE}
+# Run these if you don't have these libraries yet
+# install.packages("tidyverse") 
+# install.packages("data.table")
+# install.packages("tm")  # for text mining
+# install.packages("SnowballC") # for text stemming
+# install.packages("wordcloud") # word-cloud generator 
+# install.packages("RColorBrewer") # color palettes
+# install.packages("plotly") #For pretty plots
+# install.packages("vwr") #For regular expression functions
+# install.packages("DT") # for interactive html tables
+# install.packages("gridExtra") # for easy plot grids 
+library(tidyverse) # For data processing and visualization
+library(data.table) # For creating tables
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+library(plotly)
+library(vwr)
+library(DT)
+library(gridExtra)
+
+library(dplyr)
+library(tidyr)
+library(beeswarm)
+library(ggplot2)
+#library(wesanderson)
+library(gridExtra)
+
+spot_color = "#9ecae1" 
+text_color = "#525252"
+home.dir <- getwd()
+data.dir <- './raw_data'
+# viz.dir <- '.'
+data <- read.csv(file.path(home.dir, data.dir, "Hotel_Japan.csv"), na = c("NULL", "", "NA"))
+```
+
+## Cleaning the Data 
+
+- Checked and removed the missing values from our data frame
+- Distances from city center was formatted as: "0.5km from city center"
+- Had to turn it into numeric.
+- Thanks Python
+```{r, echo = FALSE, warning = FALSE, include = FALSE}
+quality.func <- function(data) {
+  
+  quality.report <- data_frame()
+
+  cnt.NA <- apply(data, 2, function(x) sum(is.na(x)))
+  
+  prop.missing <- round(cnt.NA / nrow(data), 2)
+
+  cnt.dupes <- apply(data, 2, function(x) sum(duplicated(x)))
+
+  prop.duplicates <- round(cnt.dupes / nrow(data), 2)
+  
+  reportList <- data.frame(cbind(names(prop.missing), prop.missing, prop.duplicates))
+  return(reportList)
+}
+
+quality.func(data) 
+
+data <- data.frame(data)
+attach(data)
+
+```
+
+
+## Distribution of variables
+
+Here is how the variables were distributed
+
+```{r, warning=FALSE, echo =FALSE}
+colon <- c(6,8:14)
+distribution <- data %>% gather("rating_type", "rating_value", c(6,8:14)) 
+distribution %>% 
+  ggplot(aes(x = rating_type, y = rating_value, fill = rating_type, alpha = 0.7)) +
+  geom_violin() +
+  geom_boxplot(width=0.1, fill="white", alpha = 1)+
+  labs(title="Distribution of various ratings",x="Type Of Rating", y = "Ratings")
+
+```
+
+## Price distribution
+
+
+We want to remove the most extreme outliers for prices of the hostel. The standard way to do this is to look at things that lie outside this range:
+
+$$median \pm 1.5*IQR_{data}$$
+Through google searches, we found the hostels that cost over a million yen were because of data entry errors.
+
+
+
+## Price distribution 
+
+```{r, echo = FALSE}
+data %>% filter(price.from <10000) %>% 
+  ggplot(aes(x = price.from)) +
+  geom_density(fill = "green", color = "black") #+ 
+  #geom_boxplot(width=0.1, fill = "white")
+```
+
+## Part 2: One Sample Statistical Inference  
+
+
+#### Background for Test 
+#### Hypotheses in Parameter Notation 
+#### Hypothesis Test  
+
+
+## Results and Anylsis of Test 
+
+The null hypothesis is that Hiroshima's mean summary score does not significantly differ from the hypothesized population mean, i.e.,
+$$ H_o: \mu_{_{hiro}} = \mu $$
+The alternative hypothesis is that it does significantly differ from the population mena, i.e.,
+
+$$H_{a}: \mu_{_{hiro}} \neq \mu $$
+
+Conclusively, we reject the null hypothesis because we have a small p-value. Moreover the Cohen's effect size is a smedium 
+
+
+```{r, echo = FALSE}
+library(dplyr)
+library(ggplot2)
+#head(data)
+
+#doing a t-test on Kyoto
+
+mu.city <- mean(data$summary.score, na.rm = TRUE)
+
+hiroshima <- filter(data, data$City =="Hiroshima")
+
+hiroshima.mu <- mean(hiroshima$summary.score, na.rm = TRUE)
+
+t.test(hiroshima$summary.score, mu = mu.city)
+
+Cohen.d <- abs(mu.city - hiroshima.mu)/sd(data$summary.score, na.rm = TRUE)
+
+Cohen.d
+#We set our H0: Hiroshima mean summary score = mu    HA: Hiroshima != mean summary score
+#According to our conclusion, we reject the null hypothesis. Hiroshima mean of summary scores does not fall within the 95% confidence interval.
+```
+
+
+## Part 3: Statistical Inference for Categorical Explanatory Variable
+
+The interpretation of the confidence interval: We can say with 95% confidence that all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
+
+```{r, echo = FALSE}
+alpha = 0.05
+# Convert from string to factor
+data.rating <- factor(data$rating.band)
+# Find the number of obs
+n <- length(data.rating)
+# Find number of obs per type
+rating.breakdown <- table(data.rating)
+# Get the proportion
+p_hat <- rating.breakdown['Superb']/n
+# Calculate the critical z-score
+z <- qnorm(1-alpha/2)
+# Compute the CI
+CI <- p_hat + c(-1,1)*z*sqrt(p_hat*(1-p_hat)/n)
+
+
+paste("The 95% Confidence Interval is:", round(CI[1], 5), "to", round(CI[2], 5 ))
+#interpretation of the confidence interval: We can say with 95% confidence that the all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
+
+```
+
+
+#### Background for Test 
+
+#### Hypotheses in Parameter Notation
+
+
+#### Hypotheses Test for Population Proportion 
+
+
+#### Results and Analysis 
+
+
+
+
+
+## Part 4: Two Sample Statistical Inference  
+
+The Two Sample t-test
+
+
+```{r, echo = FALSE}
+# subset for distance from city center 
+mid.dist <- median(Distance)
+mean(Distance)
+
+
+# high dist low dist two sample test 
+# for price 
+high.dist <- data %>% 
+  select(Distance, price.from ) %>% 
+  filter(Distance > mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, price.from) %>% 
+  filter(Distance < mid.dist)
+
+two.test.price <- t.test(high.dist$price.from, low.dist$price.from)
+
+
+# for summary score 
+
+high.dist <- data %>% 
+  select(Distance, summary.score ) %>% 
+  filter(Distance > mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, summary.score) %>% 
+  filter(Distance < mid.dist)
+
+two.test.score <- t.test(high.dist$summary.score, low.dist$summary.score)
+
+# for value for money 
+
+high.dist <- data %>% 
+  select(Distance, valueformoney ) %>% 
+  filter(Distance > mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, valueformoney) %>% 
+  filter(Distance < mid.dist)
+
+two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
+```
+
+```{r, echo = FALSE}
+library(dplyr)
+library(DT)
+#install.packages("effsize")
+library(effsize)
+
+# subset 
+only.num <- data %>% 
+  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security)
+
+hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
+
+datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest")
+
+# subset for distance from city center 
+mid.dist <- median(Distance)
+mean(Distance)
+
+# high dist low dist two sample test 
+
+# for price 
+high.dist <- data %>% 
+  select(Distance, price.from ) %>% 
+  filter(Distance > mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, price.from) %>% 
+  filter(Distance < mid.dist)
+
+two.test.price <- t.test(high.dist$price.from, low.dist$price.from)
+price.cohens <- cohen.d(high.dist$price, low.dist$price, pooled = TRUE)
+
+
+
+# for summary score 
+
+high.dist <- data %>% 
+  select(Distance, summary.score ) %>% 
+  filter(Distance > mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, summary.score) %>% 
+  filter(Distance < mid.dist)
+
+two.test.score <- t.test(high.dist$summary.score, low.dist$summary.score)
+
+score.cohens <- cohen.d(high.dist$summary.score, low.dist$summary.score, pooled = TRUE, na.rm = TRUE)
+
+
+# for value for money 
+
+high.dist <- data %>% 
+  select(Distance, valueformoney ) %>% 
+  filter(Distance > mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, valueformoney) %>% 
+  filter(Distance < mid.dist)
+
+two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
+
+
+value.cohens <- cohen.d(high.dist$valueformoney, low.dist$valueformoney, pooled=TRUE, na.rm = TRUE)
+
+# results of cohens effect size 
+price.cohens 
+
+score.cohens
+
+value.cohens
+```
+
+#### Background for Test 
+#### Hypotheses in Parametric Notation 
+#### Two Sample Test 
+#### Results and Analysis 
+
+
+## Part 5: Probability of A Stay being 'Worth it' Given Distance From City Center
+#### Background 
+
+```{r}
+
+```
+
+
+
+#### Question 
+
+
+#### Method 
+
+
+#### Execution 
+
+
+#### By Cities 
+
+
+#### Deriving Bayes' Law 
+
+
+#### Results and Analysis 
+
+
+
+
+### Conclusions 
+#### Limitations  
+#### Future Work and Questions  
+
+
