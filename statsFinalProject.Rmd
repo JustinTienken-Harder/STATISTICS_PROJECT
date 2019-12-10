@@ -1,0 +1,107 @@
+---
+title: "finalProject"
+author: "Ashley Brockway"
+date: "12/9/2019"
+output: html_document
+---
+
+##Setup
+### options
+Set up global options
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+knitr::opts_chunk$set(tidy=TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=70))
+knitr::opts_chunk$set(fig.height=8, fig.width=12)
+```  
+## Introducing our Data and Methods {.tabset}
+
+We found our dataset on [kaggle.](https://www.kaggle.com/azathoth42/myanimelist)  
+The two collections we chose to use were anime_clean and userS_clean. The filtered versions of these documents is alse included to evaluate the data quality.  The cleaned version excludes inprobable entries.  The filtered version excludes users that have incomplete personal information.  
+
+### Libraries
+Load in needed libraries:  
+
+```{r libraries, results='hide'}
+# Run these if you don't have these libraries yet
+# install.packages("tidyverse") 
+# install.packages("data.table")
+# install.packages("tm")  # for text mining
+# install.packages("SnowballC") # for text stemming
+# install.packages("wordcloud") # word-cloud generator 
+# install.packages("RColorBrewer") # color palettes
+# install.packages("plotly") #For pretty plots
+# install.packages("vwr") #For regular expression functions
+# install.packages("DT") # for interactive html tables
+# install.packages("gridExtra") # for easy plot grids 
+library(tidyverse) # For data processing and visualization
+library(data.table) # For creating tables
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+library(plotly)
+library(vwr)
+library(DT)
+library(gridExtra)
+
+spot_color = "#9ecae1" 
+text_color = "#525252"
+```
+  
+### File management
+Create variables for directories
+```{r file_management, echo=TRUE, results='hide'}
+home.dir <- getwd()
+data.dir <- './raw_data'
+# viz.dir <- '.'
+```
+
+#### import
+```{r echo=TRUE, results='hide'}
+raw.data <- read.csv(file.path(home.dir, data.dir, "Hostel.csv"), na = c("NULL", "", "NA")) 
+```
+
+### Part 1: Descriptive Analysis  
+```{r}
+```
+
+### Part 2: One Sample Statistical Inference  
+#### Background for Test 
+#### Hypotheses in Parameter Notation 
+```{r} 
+```
+#### Hypothesis Test  
+#### Results and Anylsis of Test 
+### Part 3: Statistical Inference for Categorical Explanatory Variable
+```{r}
+```
+#### Background for Test 
+#### Hypotheses in Parameter Notation
+#### Hypotheses Test for Population Proportion 
+#### Results and Analysis 
+### Part 4: Two Sample Statistical Inference  
+```{r}
+```
+#### Background for Test 
+#### Hypotheses in Parametric Notation 
+#### Two Sample Test 
+#### Results and Analysis 
+### Part 5: Probability of A Stay being 'Worth it' Given Distance From City Center
+#### Background 
+```{r}
+```
+#### Question 
+#### Method 
+#### Execution 
+#### By Cities 
+#### Deriving Bayes' Law 
+#### Results and Analysis 
+
+### Conclusions 
+#### Limitations  
+#### Future Work and Questions  
+
+
+  
