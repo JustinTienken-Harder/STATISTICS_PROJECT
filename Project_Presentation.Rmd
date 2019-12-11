@@ -2,28 +2,15 @@
 title: "Hostel Ratings And Prices"
 author: "Ashley, Manda, Justin"
 date: "12/10/2019"
-output: ioslides_presentation
+output: 
+  ioslides_presentation:
+    widescreen: true 
+    smaller: true 
 ---
 
 
-## Introducing our Data and Methods {.tabset}
-
-We found our dataset on [kaggle.](https://www.kaggle.com/azathoth42/myanimelist)  
-The two collections we chose to use were anime_clean and userS_clean. The filtered versions of these documents is alse included to evaluate the data quality.  The cleaned version excludes inprobable entries.  The filtered version excludes users that have incomplete personal information.  
-
 ```{r, include = FALSE}
 
-# Run these if you don't have these libraries yet
-# install.packages("tidyverse") 
-# install.packages("data.table")
-# install.packages("tm")  # for text mining
-# install.packages("SnowballC") # for text stemming
-# install.packages("wordcloud") # word-cloud generator 
-# install.packages("RColorBrewer") # color palettes
-# install.packages("plotly") #For pretty plots
-# install.packages("vwr") #For regular expression functions
-# install.packages("DT") # for interactive html tables
-# install.packages("gridExtra") # for easy plot grids 
 library(tidyverse) # For data processing and visualization
 library(data.table) # For creating tables
 library(tm)
@@ -43,6 +30,14 @@ library(ggplot2)
 #library(wesanderson)
 library(gridExtra)
 library(plyr)
+library(dplyr)
+library(DT)
+#install.packages("effsize")
+library(effsize)
+
+```
+
+```{r, include = FALSE}
 spot_color = "#9ecae1" 
 text_color = "#525252"
 home.dir <- getwd()
@@ -51,25 +46,20 @@ data.dir <- './raw_data'
 data <- read.csv(file.path(home.dir, data.dir, "Hotel_Japan.csv"), na = c("NULL", "", "NA"))
 ```
 
-## Data Table
-
-```{r, echo = FALSE, fig.height= 2, fig.width=3}
-# subset 
-only.num <- data %>% 
-  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security)
-
-hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
-
-datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest")
-```
 
 
-## Cleaning the Data 
 
-- Checked and removed the missing values from our data frame
-- Distances from city center was formatted as: "0.5km from city center"
-- Had to turn it into numeric.
-- Thanks Python
+## Introducing the Data 
+- We obtained our sample of 342 Japanese hostels from [kaggle user Koki Ando](https://www.kaggle.com/koki25ando/hostel-world-dataset/version/3)  
+- In the first sections of project we will use descriptive statistics to describe our sample  
+- For Parts two through five we will be conducting statistical inference on the population of Japanese Hostels on Hostelworld.com  
+- Our sample includes 12 variables, however, these were our variables of interest:  
+  + Ratings: Summarys, Text, and Specific based on experiencial qualities  
+  
+  + City: Tokyo, Osaka, Kyoto, Hiroshima, Fukuoka-City  
+  
+  + Lowest Price: lowest price for a one night stay  
+  + Value for money: User rating of whether their stay was worth the money 
 ```{r, echo = FALSE, warning = FALSE, include = FALSE}
 quality.func <- function(data) {
   
@@ -95,9 +85,9 @@ attach(data)
 ```
 
 
-## Distribution of variables
+## Distribution of variables {.flexbox .vcenter}
 
-Here is how the variables were distributed
+Most hostels were well rated, and while low ratings exist, many seem to be outliers
 
 ```{r, warning=FALSE, echo =FALSE}
 colon <- c(6,8:14)
@@ -110,42 +100,57 @@ distribution %>%
 
 ```
 
-## Price distribution
+## Outliers
 
-
-We want to remove the most extreme outliers for prices of the hostel. The standard way to do this is to look at things that lie outside this range:
+- We want to remove the most extreme outliers for our variables  
+- The standard way to do this is to look at things that lie outside this range:
 
 $$median \pm 1.5*IQR_{data}$$
-Through google searches, we found the hostels that cost over a million yen were because of data entry errors.
+- The variables in the data set were often skewed, especially ratings which were almost always high, so removing outliers was important for our analysis  
+- However, one outlier for price was so absurd we investigated it further 
+
+  + The 10000 USD stay?  
+  
+  + Through google searches, we found the hostels that cost over a million yen were because     of data entry errors.
 
 
 
-## Price distribution 
+## Price distribution|After Removing Outliers {.flexbox .vcenter}
 
 ```{r, echo = FALSE}
 data %>% filter(price.from <10000) %>% 
   ggplot(aes(x = price.from)) +
-  geom_density(fill = "green", color = "black") #+ 
+  geom_density(fill = "green", color = "black") + 
+  xlab("Lowest Price") + 
+  ylab("Density") + 
+  ggtitle("Density Plot of Prices for Japanese Hostels")#+ 
   #geom_boxplot(width=0.1, fill = "white")
 ```
 
-## Part 2: One Sample Statistical Inference  
-
-The null hypothesis is that Hiroshima's mean summary score does not significantly differ from the hypothesized population mean, i.e.,
-$$ H_o: \mu_{_{hiro}} = \mu $$
-The alternative hypothesis is that it does significantly differ from the population mena, i.e.,
-
-$$H_{a}: \mu_{_{hiro}} \neq \mu $$
-
-Conclusively, we reject the null hypothesis because we have a small p-value. Moreover the Cohen's effect size is a smedium 
-
-## p-values
-
+## Correlation Table {.smaller .flexbox .vcenter}
 
 ```{r, echo = FALSE}
-library(dplyr)
-library(ggplot2)
-#head(data)
+# subset 
+only.num <- data %>% 
+  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security)
+
+hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
+
+datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest", rownames =c('Lowest Price','Summary Score', 'Atmosphere', 'Cleanliness', 'Value for Price', 'Staff', 'Facilities', 'Security'),colnames = c('Lowest Price'=2,'Summary Score'=3, 'Atmosphere'=4, 'Cleanliness'=5, 'Value for Price'=6, 'Staff'=7, 'Facilities'=8, 'Security'=9 ))
+```
+
+
+
+## Part 2: One Sample Statistical Inference  
+We are testing whether Hiroshima's sample mean of summary scores differs significantly from the our population parameter of interest, i.e. the population mean of Hiroshima's summary scores.  
+
+Our hypotheses are as follows:  
+
+$$ H_o: \mu_{scores} = 9.171429  $$
+
+$$H_{a}: \mu_{scores} \neq 9.171429  $$
+
+```{r, echo = FALSE}
 
 #doing a t-test on Kyoto
 
@@ -159,37 +164,22 @@ t.test(hiroshima$summary.score, mu = mu.city)
 
 Cohen.d <- abs(mu.city - hiroshima.mu)/sd(data$summary.score, na.rm = TRUE)
 
-Cohen.d
+
+# Cohen.d
 #We set our H0: Hiroshima mean summary score = mu    HA: Hiroshima != mean summary score
 #According to our conclusion, we reject the null hypothesis. Hiroshima mean of summary scores does not fall within the 95% confidence interval.
 ```
-
-
-## Part 3: Statistical Inference for Categorical Explanatory Variable
-
-The interpretation of the confidence interval: We can say with 95% confidence that all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
-
-```{r, echo = FALSE}
-alpha = 0.05
-# Convert from string to factor
-data.rating <- factor(data$rating.band)
-# Find the number of obs
-n <- length(data.rating)
-# Find number of obs per type
-rating.breakdown <- table(data.rating)
-# Get the proportion
-p_hat <- rating.breakdown['Superb']/n
-# Calculate the critical z-score
-z <- qnorm(1-alpha/2)
-# Compute the CI
-CI <- p_hat + c(-1,1)*z*sqrt(p_hat*(1-p_hat)/n)
-
-
-paste("The 95% Confidence Interval is:", round(CI[1], 5), "to", round(CI[2], 5 ))
-#interpretation of the confidence interval: We can say with 95% confidence that the all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
-
+## Analysis of Test for Hiroshima's Summary Scores
+- Our p-value of approximately 0.0001794 is lower than our alpha of 0.05, so we can reject our null  hypothesis. However, because our sample estimate falls within our 95% confidence interval, i.e. is not in agreement with our p-value, we would need to do further testing to be more confident in our results. 
+- In context, this means that we can surmise that Hiroshima's summary scores differ from our population parameter of interest.  
+- While we found statistically significant results, what about practical significance? 
+  + Our cohen's d value is of a medium size
+  + We can conclude that our test produced both significant results, both practically and statistically. 
+```{r echo=FALSE}
+print("Cohen's d:  0.4046792")
 ```
-## Cities confidence interval for mean
+
+## Cities' confidence intervals for Mean Summary Score 
 
 ```{r, echo = FALSE, warning=FALSE}
 
@@ -255,103 +245,59 @@ ggplot(cdata, aes(x=Group, y = mean, group = Group)) +
       color=Group), width=.1, position=pd)
 ```
 
+## Part 3: Proprtion Test for Super Hostel Ratings  
+For this test, our parameter of interest is the population proportion of superb rating bands for Japanese Hostels. We are testing whether the proportion of superb ratings in our sample differs significantly from population proportion.  
+Our hypotheses are as follows: 
+$$ H_{0}: p_{superb} =  0.5321637 $$
+$$  H_{a}: p_{superb} \neq  0.5321637$$
+```{r echo=FALSE}
+test <- prop.test(182,342, alternative="two.sided" )
+test
+```
+## Results of Hypothesis Test on Superb Ratings  
+- For our test, we found that we cannot say that the sample proportion of superbly rated hostels differs significantly from our population parameter of interest.  
+- Our sample estimate being within our confidence interval means that our confidence interval is in agreement with the results of our test.  
+- Even though our results were not statistically significant, we evaluated the effect size as well, and found that the results of this test were practically insignificant as well due to the tiny effect size.   
+```{r echo=FALSE}
+effect.size<- 2* abs(asin(sqrt(182/342))-asin(sqrt(0.5321637)))
+print("Effect Size:")
+effect.size
+```
+## Confidence Interval for a Superb Hostel Rating 
+The interpretation of the confidence interval: We can say with 95% confidence that all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
 
-#### Background for Test 
+```{r, echo = FALSE}
+alpha = 0.05
+# Convert from string to factor
+data.rating <- factor(data$rating.band)
+# Find the number of obs
+n <- length(data.rating)
+# Find number of obs per type
+rating.breakdown <- table(data.rating)
+# Get the proportion
+p_hat <- rating.breakdown['Superb']/n
+# Calculate the critical z-score
+z <- qnorm(1-alpha/2)
+# Compute the CI
+CI <- p_hat + c(-1,1)*z*sqrt(p_hat*(1-p_hat)/n)
 
-#### Hypotheses in Parameter Notation
-
-
-#### Hypotheses Test for Population Proportion 
-
-
-#### Results and Analysis 
-
-
+paste("The 95% Confidence Interval is:", round(CI[1], 5), "to", round(CI[2], 5 ))
+#interpretation of the confidence interval: We can say with 95% confidence that the all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
+```
 
 
 
 ## Part 4: Two Sample Statistical Inference  
-
-The Two Sample t-test
-
-
-```{r, echo = FALSE}
+- For our two sample test, we considered the variable distance from city center.  
+- Then we created considered whether certain attributes of the sample of hostels that are far from the city center is significantly different from those that are close to the city center. 
+- Our first test is for the mean price, and our hypotheses are as follows: 
+$$H_{0}:  $$ 
+```{r, echo = FALSE, include=FALSE}
 # subset for distance from city center 
 mid.dist <- median(Distance)
 #mean(Distance)
 
-
-# high dist low dist two sample test 
-# for price 
-high.dist <- data %>% 
-  select(Distance, price.from ) %>% 
-  filter(Distance > mid.dist) 
-
-low.dist <- data %>% 
-  select(Distance, price.from) %>% 
-  filter(Distance < mid.dist)
-
-two.test.price <- t.test(high.dist$price.from, low.dist$price.from)
-two.test.price
-
-# for summary score 
-
-high.dist <- data %>% 
-  select(Distance, summary.score ) %>% 
-  filter(Distance > mid.dist) 
-
-low.dist <- data %>% 
-  select(Distance, summary.score) %>% 
-  filter(Distance < mid.dist)
-
-two.test.score <- t.test(high.dist$summary.score, low.dist$summary.score)
-#two.test.score
-# for value for money 
-
-high.dist <- data %>% 
-  select(Distance, valueformoney ) %>% 
-  filter(Distance > mid.dist) 
-
-low.dist <- data %>% 
-  select(Distance, valueformoney) %>% 
-  filter(Distance < mid.dist)
-
-two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
 #two.test.value
-```
-
-## Next slide 
-```{r, echo = FALSE}
-two.test.score
-```
-
-## Next slide, Again
-
-```{r, echo = FALSE}
-two.test.value
-```
-
-
-```{r, echo = FALSE}
-library(dplyr)
-library(DT)
-#install.packages("effsize")
-library(effsize)
-
-# subset 
-only.num <- data %>% 
-  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security)
-
-hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
-
-#(hostel.cor, caption = "Correlation Matrix: Variables of Interest")
-
-# subset for distance from city center 
-mid.dist <- median(Distance)
-mean(Distance)
-
-# high dist low dist two sample test 
-
 # for price 
 high.dist <- data %>% 
   select(Distance, price.from ) %>% 
@@ -397,7 +343,24 @@ two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
 value.cohens <- cohen.d(high.dist$valueformoney, low.dist$valueformoney, pooled=TRUE, na.rm = TRUE)
 ```
 
-## Cohen's D for price
+```{r echo = FALSE}
+two.test.price
+price.cohens
+```
+
+## Next slide 
+```{r echo = FALSE}
+two.test.score
+score.cohens
+```
+
+## Next slide, Again
+
+```{r, echo = FALSE}
+two.test.value
+value.cohens
+```
+
 ```{r, echo = FALSE}
 # results of cohens effect size 
 price.cohens
@@ -407,11 +370,6 @@ price.cohens
 
 ```{r, echo = FALSE}
 score.cohens
-```
-
-## Cohen's D for value
-```{r, echo = FALSE}
-value.cohens
 ```
 
 #### Background for Test 
@@ -503,51 +461,6 @@ cp1 + cp2 + cp3 + cp4
 
 
 ```
-
-
-     
-      
-       
-        
-         
-          
-           
-            
-             
-              
-               
-                
-                 
-                 .
-                 .
-                 .
-                 .
-                 .
-                 .
-                 .
-                 .
-                 .
-                 .
-                 
-#### Question 
-
-
-#### Method 
-
-
-#### Execution 
-
-
-#### By Cities 
-
-
-#### Deriving Bayes' Law 
-
-
-#### Results and Analysis 
-
-
-
 
 ### Conclusions 
 #### Limitations  
