@@ -291,7 +291,8 @@ paste("The 95% Confidence Interval is:", round(CI[1], 5), "to", round(CI[2], 5 )
 - For our two sample test, we considered the variable distance from city center.  
 - Then we created considered whether certain attributes of the sample of hostels that are far from the city center is significantly different from those that are close to the city center. 
 - Our first test is for the mean price, and our hypotheses are as follows: 
-$$H_{0}:  $$ 
+$$H_{0}: \mu_{far} - \mu_{close} = 0 $$
+$$H_{a}: \mu_{far} - \mu_{close} \neq 0 $$
 ```{r, echo = FALSE, include=FALSE}
 # subset for distance from city center 
 mid.dist <- median(Distance)
@@ -343,42 +344,35 @@ two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
 value.cohens <- cohen.d(high.dist$valueformoney, low.dist$valueformoney, pooled=TRUE, na.rm = TRUE)
 ```
 
+## Test for Difference in Price  
+We fail to reject the null hypothesis, with the confidence interval in agreement with our p-value. Our effect size is also practically insignificant.  
 ```{r echo = FALSE}
 two.test.price
 price.cohens
 ```
 
-## Next slide 
+## Test for Difference in Score 
+Due to our p-value and our confidence interval not included 0, we reject our null hypothesis.  While our effect size is small, it is not negligible.  
 ```{r echo = FALSE}
 two.test.score
 score.cohens
 ```
 
-## Next slide, Again
-
+## Test for Difference in Value for Money 
+Our p-value is insignificant and our confidence interval is in agreement. Our effect size is also negligible, so we fail to reject the null hypothesis.  
 ```{r, echo = FALSE}
 two.test.value
 value.cohens
 ```
 
-```{r, echo = FALSE}
-# results of cohens effect size 
-price.cohens
-```
 
-## Cohen's D for score
+## Part 5: Probability of a Stay being 'Worth the Money'
+- For this part of our project our goal was to approach the probability of website users finding their stay was worth the money.  
+- Our first look into this was to create a probability tree of the intersections of the probabilities of a hostel being close or far from a city center, and a user rating the hostel are very worth the money and not worth the money. 
+  + Both of these variables were recoded to be used in binary terms.  
+- Our second look was to calculate the conditional probabilities of users finding that their stay was worth the money, given that they were close or far from a city center.  
 
-```{r, echo = FALSE}
-score.cohens
-```
-
-#### Background for Test 
-#### Hypotheses in Parametric Notation 
-#### Two Sample Test 
-#### Results and Analysis 
-
-
-## Part 5: P(Value given Distance)
+## Probability Tree 
 
 ![](raw_data\PROBABILITY TREE.png)
 
@@ -457,13 +451,22 @@ cp3 <- p.ld.hv/p.low.dist
 # low dis low val 
 cp4 <- p.ld.lv/p.low.dist
 cp1 + cp2 + cp3 + cp4
-
-
-
 ```
 
-### Conclusions 
-#### Limitations  
-#### Future Work and Questions  
+## Conditional Probabilities 
+- P(High Value|Low Distance) =  0.9685535
+- P(Low Value|Low Distance) = 0.03144654
+- P(High Value|High Distance) = 0.9345238
+- P(Low Value|High Distance) = 0.06547619  
+- With these values we could derive Bayes' Law like so:  
+$$P(Value|Distance)= {P(Distance|Value) \times P(Value)\over{P(Distance)}} $$  
+
+## Results of Probability Analysis  
+- Because so few users rate hostel visits poorly, it is hard to see an impact of distance on the probability of finding a stay to be worth the price.  
+- However, in the conditional probabilities that a slightly larger, while negligibly so, probability of a user rating the hostel low value given that it was farther from a city center.  
+- Results would be clearer if we conducted the same analysis for individual cities, because each city will bring a different meaning to far or close to the city center, and thus the impact of distance on value may be different.  
+
+## Conclusions  
+ 
 
 
