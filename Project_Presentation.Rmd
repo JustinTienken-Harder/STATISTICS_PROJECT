@@ -130,6 +130,7 @@ data %>% filter(price.from <10000) %>%
 ## Correlation Table {.smaller .flexbox .vcenter}
 
 ```{r, echo = FALSE}
+data <- data %>% filter(price.from <10000)
 # subset 
 only.num <- data %>% 
   select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security, Distance)
@@ -146,9 +147,9 @@ We are testing whether Hiroshima's sample mean of summary scores differs signifi
 
 Our hypotheses are as follows:  
 
-$$ H_o: \mu_{_{H}} = 8.782569  $$
+$$ H_o: \mu_{_{H}} = 8.786462  $$
 
-$$H_{a}: \mu_{_{H}} \neq 8.782569  $$
+$$H_{a}: \mu_{_{H}} \neq 8.786462  $$
 
 ```{r, echo = FALSE}
 
@@ -248,7 +249,10 @@ ggplot(cdata, aes(x=Group, y = F, group = Group)) +
       geom_point(position=pd) +
    #draws the CI error bars
       geom_errorbar(data=cdata, aes(ymin=L, ymax=U, 
-      color=Group), width=.1, position=pd)
+      color=Group), width=.1, position=pd) +
+      xlab("City") +
+      ylab("Summary Score") +
+      ggtitle("Confidence Intervals For Cities Summary Score")
 ```
 
 ## Part 3: Proportion Test for Superb Hostel Ratings  
@@ -354,7 +358,7 @@ value.cohens <- cohen.d(high.dist$valueformoney, low.dist$valueformoney, pooled=
 ```
 
 ## Test for Difference in Price  
-We fail to reject the null hypothesis, with the confidence interval in agreement with our p-value. Our effect size is also practically insignificant.  
+We reject the null hypothesis; moreover, the confidence interval is in agreement with our p-value. Further, the effect size is also practically small.   
 ```{r echo = FALSE}
 two.test.price
 price.cohens
@@ -486,8 +490,3 @@ $$P(Value|Distance)= {P(Distance|Value) \times P(Value)\over{P(Distance)}} $$
 - We see that overall atmosphere, facilities, and cleanliness correlate with a positive summary score.  
 - We also find that distance is not a factor in a postive value evaluation of the stay. 
 - In a future study, it would be interesting to view countries nearby, run a two-sample t-test, and compare results of Japanese hostels and other country's hostels on what factors impact their ratings.   
-
-
- 
-
-
