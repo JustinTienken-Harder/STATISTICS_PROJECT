@@ -12,6 +12,7 @@ We found our dataset on [kaggle.](https://www.kaggle.com/azathoth42/myanimelist)
 The two collections we chose to use were anime_clean and userS_clean. The filtered versions of these documents is alse included to evaluate the data quality.  The cleaned version excludes inprobable entries.  The filtered version excludes users that have incomplete personal information.  
 
 ```{r, include = FALSE}
+
 # Run these if you don't have these libraries yet
 # install.packages("tidyverse") 
 # install.packages("data.table")
@@ -33,14 +34,15 @@ library(plotly)
 library(vwr)
 library(DT)
 library(gridExtra)
-
+#install.packages("plotrix")
+library(plotrix)
 library(dplyr)
 library(tidyr)
 library(beeswarm)
 library(ggplot2)
 #library(wesanderson)
 library(gridExtra)
-
+library(plyr)
 spot_color = "#9ecae1" 
 text_color = "#525252"
 home.dir <- getwd()
@@ -48,6 +50,19 @@ data.dir <- './raw_data'
 # viz.dir <- '.'
 data <- read.csv(file.path(home.dir, data.dir, "Hotel_Japan.csv"), na = c("NULL", "", "NA"))
 ```
+
+## Data Table
+
+```{r, echo = FALSE, fig.height= 2, fig.width=3}
+# subset 
+only.num <- data %>% 
+  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security)
+
+hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
+
+datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest")
+```
+
 
 ## Cleaning the Data 
 
@@ -116,14 +131,6 @@ data %>% filter(price.from <10000) %>%
 
 ## Part 2: One Sample Statistical Inference  
 
-
-#### Background for Test 
-#### Hypotheses in Parameter Notation 
-#### Hypothesis Test  
-
-
-## Results and Anylsis of Test 
-
 The null hypothesis is that Hiroshima's mean summary score does not significantly differ from the hypothesized population mean, i.e.,
 $$ H_o: \mu_{_{hiro}} = \mu $$
 The alternative hypothesis is that it does significantly differ from the population mena, i.e.,
@@ -131,6 +138,8 @@ The alternative hypothesis is that it does significantly differ from the populat
 $$H_{a}: \mu_{_{hiro}} \neq \mu $$
 
 Conclusively, we reject the null hypothesis because we have a small p-value. Moreover the Cohen's effect size is a smedium 
+
+## p-values
 
 
 ```{r, echo = FALSE}
@@ -180,6 +189,71 @@ paste("The 95% Confidence Interval is:", round(CI[1], 5), "to", round(CI[2], 5 )
 #interpretation of the confidence interval: We can say with 95% confidence that the all Japanese hostels on the website will have  47.9% - 58.5% of their ratings will be "Superb"
 
 ```
+## Cities confidence interval for mean
+
+```{r, echo = FALSE, warning=FALSE}
+
+mu.city <- mean(data$summary.score, na.rm = TRUE)
+hiroshima <- filter(data, data$City =="Hiroshima")
+hiroshima.mu <- mean(hiroshima$summary.score, na.rm = TRUE) 
+h <- t.test(hiroshima$summary.score, mu = mu.city)
+mu.city <- mean(data$summary.score, na.rm = TRUE)
+osaka <- filter(data, data$City =="Osaka")
+osaka.mu <- mean(osaka$summary.score, na.rm = TRUE) 
+o <- t.test(osaka$summary.score, mu = mu.city)
+mu.city <- mean(data$summary.score, na.rm = TRUE)
+fukuoka <- filter(data, data$City =="Fukuoka-City")
+fukuoak.mu <- mean(fukuoka$summary.score, na.rm = TRUE) 
+f <- t.test(fukuoka$summary.score, mu = mu.city)
+mu.city <- mean(data$summary.score, na.rm = TRUE)
+kyoto <- filter(data, data$City =="Kyoto")
+kyoto.mu <- mean(kyoto$summary.score, na.rm = TRUE) 
+k <- t.test(kyoto$summary.score, mu = mu.city)
+mu.city <- mean(data$summary.score, na.rm = TRUE)
+tokyo <- filter(data, data$City =="Tokyo")
+tokyo.mu <- mean(tokyo$summary.score, na.rm = TRUE) 
+t <- t.test(tokyo$summary.score, mu = mu.city)
+o <- c(8.407384, 8.846081)
+f <- c(8.778739, 9.362438)
+t <- c(8.562692,8.876652)
+h <- c(9.009020, 9.333837)
+k <- c(8.731997, 9.191291)
+x <- unique(data$City)
+x <- data.frame(x)
+F <- c((8.407384 + 8.846081)/2,(8.778739 + 9.362438)/2,(8.562692+8.876652)/2,(9.009020+ 9.333837)/2,(8.731997+ 9.191291)/2 ) 
+L <- c(8.778739,9.009020, 8.731997, 8.407384, 8.562692)
+U <- c(9.362438, 9.333837,9.191291,8.846081,8.876652)
+#require(plotrix)
+#plotCI(x, y = NULL, ui=U, li=L)
+#library(plyr)
+x <- unique(data$City)
+x <- data.frame(x)
+thing<-data.frame(Group=factor(rep(c("Fukuoka-City","Hiroshima","Kyoto","Osaka","Tokyo"),2)),
+                  
+                                    
+                  Y = c( 8.778739, 9.009020,
+                        8.731997,8.407384,
+                         8.562692,9.362438,
+                        9.333837,9.191291,
+                        8.846081,8.876652
+                        
+                        )
+                  )
+                  
+                  
+cdata <- ddply(thing, "Group", summarise,
+               N    = length(Y),
+               mean = mean(Y)
+               )
+#cdata
+pd <- position_dodge(0.78)
+ggplot(cdata, aes(x=Group, y = mean, group = Group)) +
+   #draws the means
+      geom_point(position=pd) +
+   #draws the CI error bars
+      geom_errorbar(data=cdata, aes(ymin=L, ymax=U, 
+      color=Group), width=.1, position=pd)
+```
 
 
 #### Background for Test 
@@ -204,7 +278,7 @@ The Two Sample t-test
 ```{r, echo = FALSE}
 # subset for distance from city center 
 mid.dist <- median(Distance)
-mean(Distance)
+#mean(Distance)
 
 
 # high dist low dist two sample test 
@@ -218,7 +292,7 @@ low.dist <- data %>%
   filter(Distance < mid.dist)
 
 two.test.price <- t.test(high.dist$price.from, low.dist$price.from)
-
+two.test.price
 
 # for summary score 
 
@@ -231,7 +305,7 @@ low.dist <- data %>%
   filter(Distance < mid.dist)
 
 two.test.score <- t.test(high.dist$summary.score, low.dist$summary.score)
-
+#two.test.score
 # for value for money 
 
 high.dist <- data %>% 
@@ -243,7 +317,20 @@ low.dist <- data %>%
   filter(Distance < mid.dist)
 
 two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
+#two.test.value
 ```
+
+## Next slide 
+```{r, echo = FALSE}
+two.test.score
+```
+
+## Next slide, Again
+
+```{r, echo = FALSE}
+two.test.value
+```
+
 
 ```{r, echo = FALSE}
 library(dplyr)
@@ -257,7 +344,7 @@ only.num <- data %>%
 
 hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
 
-datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest")
+#(hostel.cor, caption = "Correlation Matrix: Variables of Interest")
 
 # subset for distance from city center 
 mid.dist <- median(Distance)
@@ -308,12 +395,22 @@ two.test.value <- t.test(high.dist$valueformoney,low.dist$valueformoney)
 
 
 value.cohens <- cohen.d(high.dist$valueformoney, low.dist$valueformoney, pooled=TRUE, na.rm = TRUE)
+```
 
+## Cohen's D for price
+```{r, echo = FALSE}
 # results of cohens effect size 
-price.cohens 
+price.cohens
+```
 
+## Cohen's D for score
+
+```{r, echo = FALSE}
 score.cohens
+```
 
+## Cohen's D for value
+```{r, echo = FALSE}
 value.cohens
 ```
 
@@ -323,15 +420,115 @@ value.cohens
 #### Results and Analysis 
 
 
-## Part 5: Probability of A Stay being 'Worth it' Given Distance From City Center
-#### Background 
+## Part 5: P(Value given Distance)
 
-```{r}
+![](raw_data\PROBABILITY TREE.png)
+
+
+```{r, echo = FALSE, include = FALSE}
+data <-  data %>% filter(!is.na(valueformoney) & !is.na(Distance))
+
+mid.dist <- median(data$Distance)
+
+mid.score <- 6.5
+hi.score <- data %>% 
+  select(valueformoney) %>% 
+  filter(valueformoney >= mid.score)
+lo.score <- data %>% 
+  select(valueformoney) %>% 
+  filter(valueformoney < mid.score)
+
+high.dist <- data %>% 
+  select(Distance, valueformoney ) %>% 
+  filter(Distance >= mid.dist) 
+
+low.dist <- data %>% 
+  select(Distance, valueformoney) %>% 
+  filter(Distance < mid.dist)
+
+
+# Dist. Counts 
+set.size <- length(data$X)
+hi.dist.cnt <- length(high.dist$Distance)
+low.dist.cnt <- length(low.dist$Distance)
+# Score Counts 
+hi.score.cnt <- length(hi.score$valueformoney)
+low.score.cnt <- length(lo.score$valueformoney)
+# Counts for conditions 
+# new sub 
+
+hi.dist.score <- data %>% 
+  select(Distance, valueformoney) %>%
+  filter(Distance >= mid.dist & valueformoney > mid.score)
+hi.dist.low.score <- data %>% 
+  select(Distance, valueformoney) %>%
+  filter(Distance >= mid.dist & valueformoney <= mid.score)
+  
+low.dist.score <- data %>% 
+  select(Distance, valueformoney) %>%
+  filter(Distance < mid.dist & valueformoney <= mid.score)
+  
+low.dist.hi.score <- data %>% 
+  select(Distance, valueformoney) %>%
+  filter(Distance < mid.dist & valueformoney > mid.score)
+  
+# Proportions Hi and low Distance
+p.hi.dist <- hi.dist.cnt/set.size
+p.low.dist <- low.dist.cnt/set.size
+# Proportions Hi and low Scores 
+p.hi.score <- hi.score.cnt/set.size
+  
+p.low.score <- low.score.cnt/set.size
+# Sizes for Intersections of Probablilities of Dependent stuff 
+hi.d.val <- length(hi.dist.score$valueformoney)
+hi.d.lval <- length(hi.dist.low.score$valueformoney)
+low.d.hval <- length(low.dist.hi.score$valueformoney)
+low.d.val <- length(low.dist.score$valueformoney)
+# Intersection Probablities
+p.hd.hv <- hi.d.val/set.size
+p.hd.lv <- hi.d.lval/set.size
+p.ld.hv <- low.d.hval/set.size 
+p.ld.lv <- low.d.val/set.size
+# Because conditional prob = intersection/city center 
+# hi dis hi val
+cp1 <- p.hd.hv/p.hi.dist
+# hi dis lo val 
+cp2 <- p.hd.lv/p.hi.dist 
+# low dis hi val 
+cp3 <- p.ld.hv/p.low.dist 
+# low dis low val 
+cp4 <- p.ld.lv/p.low.dist
+cp1 + cp2 + cp3 + cp4
+
+
 
 ```
 
 
-
+     
+      
+       
+        
+         
+          
+           
+            
+             
+              
+               
+                
+                 
+                 .
+                 .
+                 .
+                 .
+                 .
+                 .
+                 .
+                 .
+                 .
+                 .
+                 
 #### Question 
 
 
