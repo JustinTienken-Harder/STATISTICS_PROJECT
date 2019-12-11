@@ -51,10 +51,10 @@ data <- read.csv(file.path(home.dir, data.dir, "Hotel_Japan.csv"), na = c("NULL"
 
 ## Introducing the Data 
 - We obtained our sample of 342 Japanese hostels from [kaggle user Koki Ando](https://www.kaggle.com/koki25ando/hostel-world-dataset/version/3)  
-- In the first sections of project we will use descriptive statistics to describe our sample  
-- For Parts two through five we will be conducting statistical inference on the population of Japanese Hostels on Hostelworld.com  
+- In the first section of project we will use descriptive statistics to describe our sample  
+- For Parts 2-5, we will be conducting statistical inference on the population of Japanese Hostels on Hostelworld.com  
 - Our sample includes 12 variables, however, these were our variables of interest:  
-  + Ratings: Summarys, Text, and Specific based on experiencial qualities  
+  + Ratings: Summary Score, Ratings Band, and Specific Ratings based on experiencial qualities  
   
   + City: Tokyo, Osaka, Kyoto, Hiroshima, Fukuoka-City  
   
@@ -109,13 +109,13 @@ $$median \pm 1.5*IQR_{data}$$
 - The variables in the data set were often skewed, especially ratings which were almost always high, so removing outliers was important for our analysis  
 - However, one outlier for price was so absurd we investigated it further 
 
-  + The 10000 USD stay?  
+  + The stays that cost more than 1,000,000 YEN    
   
   + Through google searches, we found the hostels that cost over a million yen were because     of data entry errors.
 
 
 
-## Price distribution|After Removing Outliers {.flexbox .vcenter}
+## Price Distribution|After Removing the 1,000,000 Yen Outliers {.flexbox .vcenter}
 
 ```{r, echo = FALSE}
 data %>% filter(price.from <10000) %>% 
@@ -132,11 +132,11 @@ data %>% filter(price.from <10000) %>%
 ```{r, echo = FALSE}
 # subset 
 only.num <- data %>% 
-  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security)
+  select(price.from, summary.score,atmosphere, cleanliness, valueformoney, staff, facilities, security, Distance)
 
 hostel.cor <- round(cor(only.num, use="complete.obs"), 2)
 
-datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest", rownames =c('Lowest Price','Summary Score', 'Atmosphere', 'Cleanliness', 'Value for Price', 'Staff', 'Facilities', 'Security'),colnames = c('Lowest Price'=2,'Summary Score'=3, 'Atmosphere'=4, 'Cleanliness'=5, 'Value for Price'=6, 'Staff'=7, 'Facilities'=8, 'Security'=9 ))
+datatable(hostel.cor, caption = "Correlation Matrix: Variables of Interest", rownames =c('Lowest Price','Summary Score', 'Atmosphere', 'Cleanliness', 'Value for Price', 'Staff', 'Facilities', 'Security','Distance'),colnames = c('Lowest Price'=2,'Summary Score'=3, 'Atmosphere'=4, 'Cleanliness'=5, 'Value for Price'=6, 'Staff'=7, 'Facilities'=8, 'Security'=9, 'Distance'=10 ))
 ```
 
 
@@ -146,9 +146,9 @@ We are testing whether Hiroshima's sample mean of summary scores differs signifi
 
 Our hypotheses are as follows:  
 
-$$ H_o: \mu_{scores} = 9.171429  $$
+$$ H_o: \mu_{_{H}} = 8.782569  $$
 
-$$H_{a}: \mu_{scores} \neq 9.171429  $$
+$$H_{a}: \mu_{_{H}} \neq 8.782569  $$
 
 ```{r, echo = FALSE}
 
@@ -179,7 +179,7 @@ Cohen.d <- abs(mu.city - hiroshima.mu)/sd(data$summary.score, na.rm = TRUE)
 print("Cohen's d:  0.4046792")
 ```
 
-## Cities' confidence intervals for Mean Summary Score 
+## Cities' Confidence Intervals for Mean Summary Score 
 
 ```{r, echo = FALSE, warning=FALSE}
 
@@ -210,7 +210,13 @@ h <- c(9.009020, 9.333837)
 k <- c(8.731997, 9.191291)
 x <- unique(data$City)
 x <- data.frame(x)
-F <- c((8.407384 + 8.846081)/2,(8.778739 + 9.362438)/2,(8.562692+8.876652)/2,(9.009020+ 9.333837)/2,(8.731997+ 9.191291)/2 ) 
+#F <- c((8.407384 + 8.846081)/2,(8.778739 + 9.362438)/2,(8.562692+8.876652)/2,(9.009020+ 9.333837)/2,(8.731997+ 9.191291)/2 ) 
+F <- c(mean(fukuoka$summary.score, na.rm = TRUE),
+        (mean(hiroshima$summary.score, na.rm = TRUE)),
+       (mean(kyoto$summary.score, na.rm = TRUE)),
+        (mean(osaka$summary.score, na.rm = TRUE)),
+        (mean(tokyo$summary.score, na.rm = TRUE)))
+
 L <- c(8.778739,9.009020, 8.731997, 8.407384, 8.562692)
 U <- c(9.362438, 9.333837,9.191291,8.846081,8.876652)
 #require(plotrix)
@@ -237,7 +243,7 @@ cdata <- ddply(thing, "Group", summarise,
                )
 #cdata
 pd <- position_dodge(0.78)
-ggplot(cdata, aes(x=Group, y = mean, group = Group)) +
+ggplot(cdata, aes(x=Group, y = F, group = Group)) +
    #draws the means
       geom_point(position=pd) +
    #draws the CI error bars
@@ -245,14 +251,17 @@ ggplot(cdata, aes(x=Group, y = mean, group = Group)) +
       color=Group), width=.1, position=pd)
 ```
 
-## Part 3: Proprtion Test for Super Hostel Ratings  
+## Part 3: Proportion Test for Superb Hostel Ratings  
 For this test, our parameter of interest is the population proportion of superb rating bands for Japanese Hostels. We are testing whether the proportion of superb ratings in our sample differs significantly from population proportion.  
+   
 Our hypotheses are as follows: 
-$$ H_{0}: p_{superb} =  0.5321637 $$
-$$  H_{a}: p_{superb} \neq  0.5321637$$
+$$ H_{0}: p_{superb} =  0.5 $$
+$$  H_{a}: p_{superb} \neq  0.5 $$
 ```{r echo=FALSE}
+
 test <- prop.test(182,342, alternative="two.sided" )
 test
+
 ```
 ## Results of Hypothesis Test on Superb Ratings  
 - For our test, we found that we cannot say that the sample proportion of superbly rated hostels differs significantly from our population parameter of interest.  
@@ -352,7 +361,7 @@ price.cohens
 ```
 
 ## Test for Difference in Score 
-Due to our p-value and our confidence interval not included 0, we reject our null hypothesis.  While our effect size is small, it is not negligible.  
+Due to our p-value and our confidence interval not including 0, we reject our null hypothesis.  While our effect size is small, it is not negligible.  
 ```{r echo = FALSE}
 two.test.score
 score.cohens
@@ -368,7 +377,7 @@ value.cohens
 
 ## Part 5: Probability of a Stay being 'Worth the Money'
 - For this part of our project our goal was to approach the probability of website users finding their stay was worth the money.  
-- Our first look into this was to create a probability tree of the intersections of the probabilities of a hostel being close or far from a city center, and a user rating the hostel are very worth the money and not worth the money. 
+- Our first look into this was to create a probability tree of the intersections of the probabilities of a hostel being close or far from a city center, and a user rating of the hostel being worth the money and not worth the money. 
   + Both of these variables were recoded to be used in binary terms.  
 - Our second look was to calculate the conditional probabilities of users finding that their stay was worth the money, given that they were close or far from a city center.  
 
@@ -458,15 +467,27 @@ cp1 + cp2 + cp3 + cp4
 - P(Low Value|Low Distance) = 0.03144654
 - P(High Value|High Distance) = 0.9345238
 - P(Low Value|High Distance) = 0.06547619  
-- With these values we could derive Bayes' Law like so:  
+- With these values we could derive Bayes' Law like so:    
+
+
 $$P(Value|Distance)= {P(Distance|Value) \times P(Value)\over{P(Distance)}} $$  
 
 ## Results of Probability Analysis  
-- Because so few users rate hostel visits poorly, it is hard to see an impact of distance on the probability of finding a stay to be worth the price.  
-- However, in the conditional probabilities that a slightly larger, while negligibly so, probability of a user rating the hostel low value given that it was farther from a city center.  
-- Results would be clearer if we conducted the same analysis for individual cities, because each city will bring a different meaning to far or close to the city center, and thus the impact of distance on value may be different.  
+- Because users rarely rate hostel visits poorly, it is hard to see the impact distance has on the probability of finding a stay to be worth the price.  
 
-## Conclusions  
+- However, in the conditional probabilities, we see a slight difference in probability of a user rating the hostel low given that the distance was far from the city center (albeit the difference is quite small).
+
+
+- Results would be clearer if we conducted the same analysis for individual cities. If we conducted this individual analysis, each city would bring a different meaning to distance (i.e. far or close) to the city center; thus, the impact of distance on value may be different.  
+
+## Conclusions|What Affects Ratings?   
+
+- Low price does not affect ratings.  
+- We see that overall atmosphere, facilities, and cleanliness correlate with a positive summary score.  
+- We also find that distance is not a factor in a postive value evaluation of the stay. 
+- In a future study, it would be interesting to view countries nearby, run a two-sample t-test, and compare results of Japanese hostels and other country's hostels on what factors impact their ratings.   
+
+
  
 
 
