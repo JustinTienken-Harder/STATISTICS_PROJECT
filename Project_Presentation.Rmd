@@ -130,6 +130,7 @@ data %>% filter(price.from <10000) %>%
 ## Correlation Table {.smaller .flexbox .vcenter}
 
 ```{r, echo = FALSE}
+
 data <- data %>% filter(price.from <10000)
 # subset 
 only.num <- data %>% 
@@ -171,7 +172,8 @@ Cohen.d <- abs(mu.city - hiroshima.mu)/sd(data$summary.score, na.rm = TRUE)
 #According to our conclusion, we reject the null hypothesis. Hiroshima mean of summary scores does not fall within the 95% confidence interval.
 ```
 ## Analysis of Test for Hiroshima's Summary Scores
-- Our p-value of approximately 0.0001794 is lower than our alpha of 0.05, so we can reject our null  hypothesis. However, because our sample estimate falls within our 95% confidence interval, i.e. is not in agreement with our p-value, we would need to do further testing to be more confident in our results. 
+- Our p-value of approximately 0.0001964 is lower than our alpha of 0.05, so we can reject our null  hypothesis. Our hypothesized population parameter does not fall within our 95% confidence interval.
+
 - In context, this means that we can surmise that Hiroshima's summary scores differ from our population parameter of interest.  
 - While we found statistically significant results, what about practical significance? 
   + Our cohen's d value is of a medium size
@@ -180,7 +182,7 @@ Cohen.d <- abs(mu.city - hiroshima.mu)/sd(data$summary.score, na.rm = TRUE)
 print("Cohen's d:  0.4046792")
 ```
 
-## Cities' Confidence Intervals for Mean Summary Score 
+## Cities' Confidence Intervals of Summary Score 
 
 ```{r, echo = FALSE, warning=FALSE}
 
@@ -252,7 +254,7 @@ ggplot(cdata, aes(x=Group, y = F, group = Group)) +
       color=Group), width=.1, position=pd) +
       xlab("City") +
       ylab("Summary Score") +
-      ggtitle("Confidence Intervals For Cities Summary Score")
+      ggtitle("Confidence Intervals For Cities Mean Summary Score")
 ```
 
 ## Part 3: Proportion Test for Superb Hostel Ratings  
